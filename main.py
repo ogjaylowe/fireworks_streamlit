@@ -145,7 +145,15 @@ def rotate_image(image, rotation):
 def main():
     st.title("Fireworks ai example")
     st.write("Process a single indentification document using a two step process (document type classification -> data extraction) and get an output containing information regarding it")
+    st.write("No data is saved in this app so feel free to use any documents you want. Sample imagery can be found for testing on the evaluation results tab.")
+    st.write("The API key is metered so don't go crazy on it with evaluation mode!")
 
+    evaluation_iterations = st.text_input("", 
+                                min_value=1, 
+                                max_value=100, 
+                                step=1, 
+                                help="Enter an integer value")
+    
     # Create file uploader
     uploaded_file = st.file_uploader("Choose an image...", type=['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'ppm'])
 

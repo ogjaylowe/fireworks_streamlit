@@ -1,5 +1,7 @@
 A streamlit application using fireworks api to process identification documents.
 
+Hosted instance can be [used at streamlit community cloud.](https://ogjaylowe-fireworks-streamlit-main-qoqn9d.streamlit.app/)
+
 TODOs:
 - the model can't differentiate between the I and the 1 on the DL1 document well
 - add preprocessing effects such as greyscale of images
