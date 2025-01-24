@@ -11,3 +11,6 @@ add docstring stuff to functions and classes
 add field for fireworks API key
 add image cropping feature 
 move rotation stuff to utils?
+
+
+Performance Summary: {'total_iterations': 10, 'exact_match_rate': 0.0, 'average_match_percentage': np.float64(45.0), 'match_percentage_std_dev': np.float64(13.017082793177757)}

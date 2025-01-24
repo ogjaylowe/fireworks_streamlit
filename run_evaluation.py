@@ -3,6 +3,7 @@ import numpy as np
 from main import KYCDocumentProcessor, rotate_image
 import streamlit as st
 from PIL import Image
+import json
 
 class ObjectComparer:
     def __init__(self, expected_output: Dict[str, Any]):
@@ -80,13 +81,13 @@ class ObjectComparer:
         }
 
 # Example usage
-def run_extraction_performance_test(expected_passport_output, uploaded_file, rotated_image):
+def run_extraction_performance_test(expected_output, uploaded_file, rotated_image, evaluation_iterations=10):
     
     # Initialize comparer
-    comparer = ObjectComparer(expected_passport_output)
+    comparer = ObjectComparer(expected_output)
     
     # Simulate multiple iterations (replace with your actual extraction function)
-    for i in range(10):
+    for i in range(evaluation_iterations):
         # Simulated extraction (replace with your actual extraction logic)
         extracted_data = simulate_extraction(uploaded_file, rotated_image)
         
@@ -126,6 +127,28 @@ st.write("Evaluation mode will run inference many times and generate a performan
 # Create file uploader
 uploaded_file = st.file_uploader("Choose an image...", type=['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'ppm'])
 
+# Default dictionary
+DEFAULT_DICT = {
+    "LN": "BENJAMIN",
+    "FN": "FRANKLIN",
+    "NATIONALITY": "USA",
+    "POB": "PROVINCE OF MASSACHUSETTS BAY, USA",
+    "DOB": "17 Jan 1706",
+    "EXP": "15 Jan 2028"
+}
+
+# Add dictionary input field with default value
+expected_output = st.text_area("Enter a Python dictionary object with the to match against inference output:", 
+                           value=str(DEFAULT_DICT),
+                           help="Enter a valid Python dictionary")
+
+# Add integer input field
+evaluation_iterations = st.number_input("Enter number of iterations for evaluation:", 
+                                min_value=1, 
+                                max_value=100, 
+                                step=1, 
+                                help="Enter an integer value")
+
 # Check if file is uploaded
 if uploaded_file is not None:
 
@@ -162,14 +185,4 @@ if uploaded_file is not None:
     
     # Option to process rotated image further
     if st.button("Process rotated image or regenerate response"):
-        # Define expected output
-        expected_passport_output = {
-            "LN": "BENJAMIN",
-            "FN": "FRANKLIN",
-            "NATIONALITY": "USA",
-            "POB": "PROVINCE OF MASSACHUSETTS BAY, USA",
-            "DOB": "17 Jan 1706",
-            "EXP": "15 Jan 2028"
-        }
-
-        run_extraction_performance_test(expected_passport_output, uploaded_file, rotated_image)
+        run_extraction_performance_test(json.loads(expected_output.replace("'", '"')), uploaded_file, rotated_image, evaluation_iterations)
