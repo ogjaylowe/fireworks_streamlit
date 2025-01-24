@@ -10,3 +10,4 @@ TODOs:
 add docstring stuff to functions and classes
 add field for fireworks API key
 add image cropping feature 
+move rotation stuff to utils?

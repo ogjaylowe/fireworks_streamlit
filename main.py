@@ -175,29 +175,32 @@ def main():
             st.image(rotated_image)
         
         # Option to process rotated image further
-        if st.button("Process Rotated Image"):
-            # Your image processing logic here
+        if st.button("Process rotated image or regenerate response"):
             st.write("Processing rotated image...")
-
-            ######################
 
             # Create prompts and a processor object for the document
             response_pattern = {
-                "document_type": "passport or drivers_licence",
+                "document_type": "passport or driver_licence",
                 "state": "if drivers licence, the state it's from, otherwise None"
             }
             system_prompt = "You are working with a financial services industry (FSI) enterprise account for their know your customer (KYC) process. You will be given Identity Verification documents and must determine if it is an American drivers licence or passport"
             user_prompt = f"Is this Identity Verification document a drivers licence or passport? Return response in the following format: {response_pattern}"
             processor = KYCDocumentProcessor(response_pattern, system_prompt)
             
-            # Determine if passport or drivers licence
-            passport_or_drivers_licence_response = processor.process_document(uploaded_image=uploaded_file, rotated_image=rotated_image, user_prompt=user_prompt)
+            # Check that response matches pattern and regenerate if not
+            max_attempts = 5
+            for attempt in range(max_attempts):
+                try:
+                    passport_or_driver_licence_response = processor.process_document(uploaded_image=uploaded_file, rotated_image=rotated_image, user_prompt=user_prompt)
+                    passport_or_driver_licence_response = json.loads(passport_or_driver_licence_response.replace("'", '"'))
+                    st.write(passport_or_driver_licence_response)
+                    if any(doc_type in passport_or_driver_licence_response["document_type"] for doc_type in ["passport", "driver_licence"]):
+                        break
+                except Exception as e:
+                    if attempt == max_attempts - 1:
+                        raise RuntimeError(f"Failed to process document after {max_attempts} attempts: {str(e)}")
 
-            # Convert result into a json object
-            passport_or_drivers_licence_response = json.loads(passport_or_drivers_licence_response.replace("'", '"'))
-            st.write(passport_or_drivers_licence_response)
-
-            if passport_or_drivers_licence_response["document_type"] == "passport":
+            if passport_or_driver_licence_response["document_type"] == "passport":
                 # Update response pattern and prompts for passport processing
                 response_pattern = {
                     "LN": "Doe",
@@ -227,9 +230,9 @@ def main():
                 image_prompt = f"what is the drivers licence (DL) number denoted by the number 1, expiration date (EXP), last name (LN), first name (FN) which may contain two first names such as Janice Ann or John Q, and date of birth (DOB) provided by the user? Provide you answer in the following format: {response_pattern}. Disregard all other information not in the response pattern."
         
                 processor.update_prompts(response_pattern, system_prompt)
-                drivers_licence_data = processor.process_document(user_prompt=image_prompt)
-                drivers_licence_data = json.loads(drivers_licence_data.replace("'", '"'))
-                st.write(drivers_licence_data)
+                driver_licence_data = processor.process_document(user_prompt=image_prompt)
+                driver_licence_data = json.loads(driver_licence_data.replace("'", '"'))
+                st.write(driver_licence_data)
 
 pg = st.navigation([st.Page(main), st.Page("eval1.py")])
 pg.run()
