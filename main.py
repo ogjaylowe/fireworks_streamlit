@@ -144,6 +144,7 @@ def rotate_image(image, rotation):
 ## MAIN
 def main():
     st.title("Fireworks ai example")
+    st.write("Process a single indentification document using a two step process (document type classification -> data extraction) and get an output containing information regarding it")
 
     # Create file uploader
     uploaded_file = st.file_uploader("Choose an image...", type=['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'ppm'])
@@ -211,7 +212,7 @@ def main():
                 user_prompt = f"what is the surname last name (LN), given first name (FN) which may contain two first names such as Janice Ann or John Q, nationality, place of birth (POB), date of birth (DOB), and date of expiration (DOE) provided by the user? The date of birth and expiration must be in a numerical format such as 01/01/2020. Provide you answer in the following format: {response_pattern}. Disregard all other information not in the response pattern."
 
                 processor.update_prompts(response_pattern, system_prompt)
-                passport_data = processor.process_document(user_prompt=user_prompt)
+                processor.process_document(user_prompt=user_prompt)
             else:
                 response_pattern = {
                     "DL": "abcd12345",
@@ -225,7 +226,7 @@ def main():
                 image_prompt = f"what is the drivers licence (DL) number denoted by the number 1, expiration date (EXP), last name (LN), first name (FN) which may contain two first names such as Janice Ann or John Q, and date of birth (DOB) provided by the user? Provide you answer in the following format: {response_pattern}. Disregard all other information not in the response pattern."
         
                 processor.update_prompts(response_pattern, system_prompt)
-                driver_licence_data = processor.process_document(user_prompt=image_prompt)
+                processor.process_document(user_prompt=image_prompt)
 
-pg = st.navigation([st.Page(main), st.Page("eval1.py")])
+pg = st.navigation([st.Page(main), st.Page("eval1.py"), st.Page("run_evaluation.py")])
 pg.run()
