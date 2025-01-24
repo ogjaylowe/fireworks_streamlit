@@ -5,6 +5,7 @@ from PIL import Image
 import json
 from dotenv import load_dotenv
 import os
+import io
 
 # Load env values
 load_dotenv()
@@ -30,7 +31,7 @@ class KYCDocumentProcessor:
         self.image_base64 = None
         self.ext = None
     
-    def process_document(self, uploaded_image=None, user_prompt=""):
+    def process_document(self, uploaded_image=None, rotated_image=None, user_prompt=""):
         """
         Process a document image and extract key information.
         
@@ -46,10 +47,14 @@ class KYCDocumentProcessor:
         # process an image whenever provided (supercedes existing data)
         elif (uploaded_image):
             # Read the file contents
-            image_bytes = uploaded_image.getvalue()
+            # Create a bytes buffer
+            buffered = io.BytesIO()
             
-            # Base64 encode the image and assign to self
-            image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+            # Save the rotated pillow image to the buffer
+            rotated_image.save(buffered, format="PNG")
+            
+            # Get the byte values from the rotated image and encode to base64
+            image_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
             self.image_base64 = image_base64
 
             # Get file extention type and assign to self
@@ -186,7 +191,7 @@ def main():
             processor = KYCDocumentProcessor(response_pattern, system_prompt)
             
             # Determine if passport or drivers licence
-            passport_or_drivers_licence_response = processor.process_document(uploaded_image=uploaded_file, user_prompt=user_prompt)
+            passport_or_drivers_licence_response = processor.process_document(uploaded_image=uploaded_file, rotated_image=rotated_image, user_prompt=user_prompt)
 
             # Convert result into a json object
             passport_or_drivers_licence_response = json.loads(passport_or_drivers_licence_response.replace("'", '"'))
