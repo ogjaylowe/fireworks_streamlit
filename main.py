@@ -228,5 +228,5 @@ def main():
                 processor.update_prompts(response_pattern, system_prompt)
                 processor.process_document(user_prompt=image_prompt)
 
-pg = st.navigation([st.Page(main), st.Page("eval1.py"), st.Page("run_evaluation.py")])
+pg = st.navigation([st.Page(main), st.Page("run_evaluation.py"), st.Page("evaluation_results.py")])
 pg.run()
