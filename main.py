@@ -31,7 +31,7 @@ class KYCDocumentProcessor:
         self.image_base64 = None
         self.ext = None
     
-    def process_document(self, uploaded_image=None, rotated_image=None, user_prompt=""):
+    def process_document(self, uploaded_image=None, rotated_image=None, user_prompt="", doc_type=False):
         """
         Process a document image and extract key information.
         
@@ -68,43 +68,51 @@ class KYCDocumentProcessor:
             self.ext = ext
                     
         # Make API call
-        try:
-            response = fireworks.client.ChatCompletion.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": self.system_prompt
-                            }
-                        ],
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": user_prompt
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/{self.ext};base64,{self.image_base64}"
+        max_attempts = 5
+        for attempt in range(max_attempts):
+            try:
+                response = fireworks.client.ChatCompletion.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": self.system_prompt
                                 }
-                            }
-                        ]
-                    }
-                ]
-            )
-            
-            # Extract and return content
-            return response.choices[0].message.content
-        
-        except Exception as e:
-            print(f"Error processing document: {e}")
-            return None
+                            ],
+                        },
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": user_prompt
+                                },
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/{self.ext};base64,{self.image_base64}"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                )
+                
+                # Extract and return content
+                passport_or_driver_licence_response = json.loads(response.choices[0].message.content.replace("'", '"'))
+                st.write(passport_or_driver_licence_response)
+
+                if not doc_type:
+                    return passport_or_driver_licence_response
+                elif any(i in passport_or_driver_licence_response["document_type"] for i in doc_type):
+                    return passport_or_driver_licence_response
+
+            except Exception as e:
+                if attempt == max_attempts - 1:
+                    raise RuntimeError(f"Failed to process document after {max_attempts} attempts: {str(e)}")
 
     def update_prompts(self, response_pattern="", system_prompt=""):
         """
@@ -187,18 +195,7 @@ def main():
             user_prompt = f"Is this Identity Verification document a drivers licence or passport? Return response in the following format: {response_pattern}"
             processor = KYCDocumentProcessor(response_pattern, system_prompt)
             
-            # Check that response matches pattern and regenerate if not
-            max_attempts = 5
-            for attempt in range(max_attempts):
-                try:
-                    passport_or_driver_licence_response = processor.process_document(uploaded_image=uploaded_file, rotated_image=rotated_image, user_prompt=user_prompt)
-                    passport_or_driver_licence_response = json.loads(passport_or_driver_licence_response.replace("'", '"'))
-                    st.write(passport_or_driver_licence_response)
-                    if any(doc_type in passport_or_driver_licence_response["document_type"] for doc_type in ["passport", "driver_licence"]):
-                        break
-                except Exception as e:
-                    if attempt == max_attempts - 1:
-                        raise RuntimeError(f"Failed to process document after {max_attempts} attempts: {str(e)}")
+            passport_or_driver_licence_response = processor.process_document(uploaded_image=uploaded_file, rotated_image=rotated_image, user_prompt=user_prompt, doc_type=["passport", "driver_licence"])
 
             if passport_or_driver_licence_response["document_type"] == "passport":
                 # Update response pattern and prompts for passport processing
@@ -215,8 +212,6 @@ def main():
 
                 processor.update_prompts(response_pattern, system_prompt)
                 passport_data = processor.process_document(user_prompt=user_prompt)
-                passport_data = json.loads(passport_data.replace("'", '"'))
-                st.write(passport_data)
             else:
                 response_pattern = {
                     "DL": "abcd12345",
@@ -231,8 +226,6 @@ def main():
         
                 processor.update_prompts(response_pattern, system_prompt)
                 driver_licence_data = processor.process_document(user_prompt=image_prompt)
-                driver_licence_data = json.loads(driver_licence_data.replace("'", '"'))
-                st.write(driver_licence_data)
 
 pg = st.navigation([st.Page(main), st.Page("eval1.py")])
 pg.run()
