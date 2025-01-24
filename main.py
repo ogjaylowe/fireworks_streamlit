@@ -6,13 +6,11 @@ import json
 from dotenv import load_dotenv
 import os
 
+# Load env values
 load_dotenv()
 fireworks.client.api_key = os.getenv('FIREWORKS_API_KEY')
 
 ## DEFINITIONS
-import base64
-import fireworks.client
-
 class KYCDocumentProcessor:
     def __init__(self, response_pattern="", system_prompt="", model="accounts/fireworks/models/phi-3-vision-128k-instruct"):
         """
@@ -56,6 +54,12 @@ class KYCDocumentProcessor:
 
             # Get file extention type and assign to self
             ext = uploaded_image.name.split('.')[-1]
+
+            # Ensure that image meets extention requirements
+            valid_extensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'ppm']
+            if ext not in valid_extensions:
+                raise ValueError(f"Invalid image file extension. Accepted types are: {', '.join(valid_extensions)}")
+    
             self.ext = ext
                     
         # Make API call
