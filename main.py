@@ -118,6 +118,13 @@ def main():
     # Check if file is uploaded
     if uploaded_file is not None:
 
+        # Ensure image meets size requirements
+        file_size = uploaded_file.size      # Size in bytes
+        max_size = 5 * 1024 * 1024          # 5 MB limit
+    
+        if file_size > max_size:
+            st.error(f"Image file is too large. Maximum size is 5 MB.")
+
         # Open the image using PIL
         image = Image.open(uploaded_file)
         
