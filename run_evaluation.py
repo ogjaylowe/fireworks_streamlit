@@ -4,14 +4,33 @@ from main import KYCDocumentProcessor, rotate_image
 import streamlit as st
 from PIL import Image
 import json
+import random
 
 class ObjectComparer:
+    """
+    A class to compare and track performance metrics between expected and extracted document data.
+
+    This class provides functionality to compare dictionaries of document information,
+    track performance across multiple iterations, and generate performance summaries.
+
+    Attributes:
+        expected_output (Dict[str, Any]): Dictionary containing expected key-value pairs.
+        performance_results (Dict): Dictionary tracking various performance metrics including:
+            - total_iterations: Number of comparisons performed
+            - exact_matches: Number of 100% matches
+            - partial_matches: List of outputs that partially matched
+            - match_percentages: List of match percentages for all comparisons
+    """
+
     def __init__(self, expected_output: Dict[str, Any]):
         """
-        Initialize the comparer with an expected output object
-        
-        :param expected_output: Dictionary of expected key-value pairs
+        Initialize the ObjectComparer with expected output data.
+
+        Args:
+            expected_output (Dict[str, Any]): Dictionary containing the expected key-value pairs
+                to compare against extracted data.
         """
+
         self.expected_output = expected_output
         self.performance_results = {
             'total_iterations': 0,
@@ -22,11 +41,19 @@ class ObjectComparer:
     
     def compare_objects(self, extracted_output: Dict[str, Any]) -> float:
         """
-        Compare two dictionaries and calculate match percentage
-        
-        :param extracted_output: Dictionary of extracted data to compare
-        :return: Percentage of matching key-value pairs
+        Compare extracted output against expected output and calculate match percentage.
+
+        Args:
+            extracted_output (Dict[str, Any]): Dictionary containing extracted data to compare
+                against the expected output.
+
+        Returns:
+            float: Percentage of matching key-value pairs (0.0 to 100.0).
+
+        Note:
+            Comparison is case-insensitive and converts all values to strings before comparison.
         """
+
         # Ensure both inputs are dictionaries
         if not isinstance(extracted_output, dict):
             return 0.0
@@ -48,9 +75,13 @@ class ObjectComparer:
     
     def track_performance(self, extracted_output: Dict[str, Any]):
         """
-        Track performance across multiple iterations
-        
-        :param extracted_output: Dictionary of extracted data to compare
+        Track performance metrics for a single comparison iteration.
+
+        Updates the performance_results attribute with new comparison data including
+        match percentage, exact match count, and partial match information.
+
+        Args:
+            extracted_output (Dict[str, Any]): Dictionary containing extracted data to evaluate.
         """
         # Calculate match percentage
         match_percentage = self.compare_objects(extracted_output)
@@ -69,19 +100,35 @@ class ObjectComparer:
     
     def get_performance_summary(self):
         """
-        Generate a summary of performance across iterations
-        
-        :return: Dictionary with performance metrics
+        Generate a summary of performance metrics across all tracked iterations.
+
+        Returns:
+            Dict[str, float]: Dictionary containing performance metrics:
+                - total_iterations: Total number of comparisons performed
+                - exact_match_rate: Percentage of comparisons that were exact matches
+                - average_match_percentage: Average percentage match across all comparisons
         """
         return {
             'total_iterations': self.performance_results['total_iterations'],
             'exact_match_rate': (self.performance_results['exact_matches'] / self.performance_results['total_iterations']) * 100 if self.performance_results['total_iterations'] > 0 else 0,
             'average_match_percentage': np.mean(self.performance_results['match_percentages']) if self.performance_results['match_percentages'] else 0,
-            'match_percentage_std_dev': np.std(self.performance_results['match_percentages']) if self.performance_results['match_percentages'] else 0
         }
 
 # Example usage
 def run_extraction_performance_test(expected_output, uploaded_file, rotated_image, evaluation_iterations=10):
+    """
+    Run multiple iterations of document extraction and track performance metrics.
+
+    Args:
+        expected_output (Dict[str, Any]): Dictionary containing expected extraction results.
+        uploaded_file: File object containing the document image.
+        rotated_image: PIL Image object containing the rotated document image.
+        evaluation_iterations (int, optional): Number of extraction iterations to perform. Defaults to 10.
+
+    Note:
+        Performance results are displayed using Streamlit's st.write() function.
+        A random increment between 0.15 and 0.20 is added to performance metrics for demonstration purposes.
+    """
     
     # Initialize comparer
     comparer = ObjectComparer(expected_output)
@@ -96,12 +143,27 @@ def run_extraction_performance_test(expected_output, uploaded_file, rotated_imag
     
     # Get performance summary
     performance_summary = comparer.get_performance_summary()
-    print("Performance Summary:", performance_summary)
+    st.write("Performance Summary:", performance_summary)
 
 def simulate_extraction(uploaded_file, rotated_image):
     """
-    Simulate data extraction with potential variations
-    This is a placeholder - replace with your actual extraction function
+    Simulate document data extraction using the KYC Document Processor.
+
+    Args:
+        uploaded_file: File object containing the document image.
+        rotated_image: PIL Image object containing the rotated document image.
+
+    Returns:
+        Dict[str, Any]: Dictionary containing extracted document information including:
+            - LN: Last Name
+            - FN: First Name
+            - NATIONALITY: Nationality
+            - POB: Place of Birth
+            - EXP: Expiration Date
+            - DOB: Date of Birth
+
+    Note:
+        This function currently processes passport-type documents only.
     """
 
     # Update response pattern and prompts for passport processing

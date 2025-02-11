@@ -7,6 +7,17 @@ from typing import Dict, Optional
 
 @dataclass
 class PerformanceData:
+    """
+    Data class representing performance metrics and metadata for a document.
+
+    Attributes:
+        exact_match_rate (float): Rate of exact matches (0.0 to 1.0).
+        average_match_percentage (float): Average percentage of matches (0.0 to 100.0).
+        image_path (str): File path to the document image.
+        title (str): Display title for the document.
+        notes (Optional[str]): Additional notes about the document performance, if any.
+    """
+
     exact_match_rate: float
     average_match_percentage: float
     image_path: str
@@ -14,11 +25,33 @@ class PerformanceData:
     notes: Optional[str] = None
 
 class PerformanceMetricsVisualizer:
+    """
+    A class for visualizing document processing performance metrics using Streamlit.
+
+    This class provides functionality to create and display performance visualizations
+    including gauge charts and document images in a structured layout.
+    """
+
     def __init__(self):
+        """
+        A class for visualizing document processing performance metrics using Streamlit.
+
+        This class provides functionality to create and display performance visualizations
+        including gauge charts and document images in a structured layout.
+        """
         self.setup_page_header()
     
     @staticmethod
     def setup_page_header():
+        """
+        Set up the Streamlit page header with title and explanatory text.
+
+        Displays information about:
+        - Number of iterations used in evaluations
+        - Definition of exact matches
+        - Definition of average matches
+        """
+
         st.title("Performance Metrics")
         st.write("all evaluations performed using 100 iterations")
         st.write("Exact match means all parameters perfectly match expected output.")
@@ -28,7 +61,23 @@ class PerformanceMetricsVisualizer:
     
     @staticmethod
     def create_percentage_plot(subheader: str, match_rate: float) -> go.Figure:
-        """Create a gauge chart for displaying match rates."""
+        """
+        Create a gauge chart visualization for displaying match rates.
+
+        Args:
+            subheader (str): Title text for the gauge chart.
+            match_rate (float): Match rate value to display (0.0 to 100.0).
+
+        Returns:
+            go.Figure: Plotly figure object containing the gauge chart.
+
+        Note:
+            The gauge is color-coded with:
+            - Red for values 0-50
+            - Green for values 50-100
+            - Blue indicator bar
+        """
+
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=match_rate,
@@ -47,7 +96,18 @@ class PerformanceMetricsVisualizer:
         return fig
     
     def display_metrics(self, performance_data: PerformanceData):
-        """Display metrics for a single document."""
+        """
+        Display performance metrics and document image in a three-column layout.
+
+        Args:
+            performance_data (PerformanceData): Performance metrics and metadata for a document.
+
+        Layout:
+            - Column 1: Document image
+            - Column 2: Exact match percentage gauge chart
+            - Column 3: Average match percentage gauge chart
+        """
+
         st.subheader(performance_data.title)
         if performance_data.notes:
             st.write(performance_data.notes)
@@ -75,6 +135,17 @@ class PerformanceMetricsVisualizer:
             )
 
 def main():
+    """
+    Main function to initialize and run the performance metrics visualization.
+
+    Creates sample performance data for multiple documents and displays their
+    metrics using the PerformanceMetricsVisualizer.
+
+    Document types include:
+    - Driver licenses (3 samples)
+    - Passports (2 samples)
+    """
+    
     # Define performance data for all documents
     documents = [
         PerformanceData(

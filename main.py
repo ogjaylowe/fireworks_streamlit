@@ -13,11 +13,28 @@ fireworks.client.api_key = os.getenv('FIREWORKS_API_KEY')
 
 ## DEFINITIONS
 class KYCDocumentProcessor:
+    """
+    A class to process KYC (Know Your Customer) documents using vision AI models.
+
+    This class handles the processing of identity documents like passports and driver's licenses,
+    converting them to base64 format and sending them to a vision model for information extraction.
+
+    Attributes:
+        model (str): The vision model identifier to use for document processing.
+        response_pattern (str): Template for structuring the response output.
+        system_prompt (str): System-level prompt for the vision model.
+        image_base64 (str): Base64 encoded image data.
+        ext (str): File extension of the processed image.
+    """
+
     def __init__(self, response_pattern="", system_prompt="", model="accounts/fireworks/models/phi-3-vision-128k-instruct"):
         """
-        Initialize the KYC Document Processor with a specific vision model.
-        
-        :param model: The vision model to use for document processing
+        Initialize the KYC Document Processor with specified parameters.
+
+        Args:
+            response_pattern (str, optional): Template for structuring the response. Defaults to empty string.
+            system_prompt (str, optional): System-level prompt for the vision model. Defaults to empty string.
+            model (str, optional): Vision model identifier. Defaults to "accounts/fireworks/models/phi-3-vision-128k-instruct".
         """
         self.model = model
         
@@ -34,11 +51,19 @@ class KYCDocumentProcessor:
     def process_document(self, uploaded_image=None, rotated_image=None, user_prompt="", doc_type=False):
         """
         Process a document image and extract key information.
-        
-        :param uploaded_image: Path to the image file
-        :param image_base64: Base64 encoded image
-        :param user_prompt: Optional custom prompt to override default
-        :return: Extracted document information
+
+        Args:
+            uploaded_image (StreamlitUploadedFile, optional): The uploaded image file. Defaults to None.
+            rotated_image (PIL.Image, optional): A rotated version of the image. Defaults to None.
+            user_prompt (str, optional): Custom prompt for the vision model. Defaults to empty string.
+            doc_type (Union[bool, list], optional): Document types to filter for. Defaults to False.
+
+        Returns:
+            dict: Extracted document information in JSON format.
+
+        Raises:
+            ValueError: If no image is provided or if the image format is invalid.
+            RuntimeError: If document processing fails after maximum attempts.
         """
         # No image or referencable encoded image to use
         if not (uploaded_image or self.image_base64):
@@ -116,21 +141,28 @@ class KYCDocumentProcessor:
 
     def update_prompts(self, response_pattern="", system_prompt=""):
         """
-        update prompts so that base64 encoded imagery can be reused
+        Update the response pattern and system prompt for reusing base64 encoded images.
+
+        Args:
+            response_pattern (str, optional): New response pattern template. Defaults to empty string.
+            system_prompt (str, optional): New system-level prompt. Defaults to empty string.
         """
         self.response_pattern = response_pattern
         self.system_prompt = system_prompt
 
 def rotate_image(image, rotation):
     """
-    Rotate an image by specified degrees (90, 180, 270, or 360)
-    
+    Rotate an image by a specified number of degrees.
+
     Args:
-        image (PIL.Image): Input image
-        rotation (int): Rotation angle (90, 180, 270, or 360)
-    
+        image (PIL.Image): Input image to be rotated.
+        rotation (int): Rotation angle in degrees. Must be one of [0, 90, 180, 270, 360].
+
     Returns:
-        PIL.Image: Rotated image
+        PIL.Image: Rotated image.
+
+    Note:
+        If an invalid rotation angle is provided, returns the original image and displays a warning.
     """
     # Ensure rotation is one of the valid increments
     valid_rotations = [0, 90, 180, 270, 360]
@@ -196,7 +228,9 @@ def main():
             }
             system_prompt = "You are working with a financial services industry (FSI) enterprise account for their know your customer (KYC) process. You will be given Identity Verification documents and must determine if it is an American drivers licence or passport"
             user_prompt = f"Is this Identity Verification document a drivers licence or passport? Return response in the following format: {response_pattern}"
+            
             processor = KYCDocumentProcessor(response_pattern, system_prompt)
+            # processor = KYCDocumentProcessor(response_pattern, system_prompt, model="accounts/fireworks/models/llama-v3p2-90b-vision-instruct")
             
             passport_or_driver_licence_response = processor.process_document(uploaded_image=uploaded_file, rotated_image=rotated_image, user_prompt=user_prompt, doc_type=["passport", "driver_licence"])
 
